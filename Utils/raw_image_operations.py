@@ -26,6 +26,7 @@ def save_image(image, name, is_out=True):
         scaled_image = (image.copy() * normalize_factor).astype(np.uint8)
         # save the image
         file_name = 'out/' + name + '.jpg' if is_out else 'data/' + name + '.jpg'
+        os.makedirs(os.path.dirname(file_name), exist_ok=True)
         skio.imsave(file_name, scaled_image)
 
 def channel_to_image(r, g, b, alpha=None):
