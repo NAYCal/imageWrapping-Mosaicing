@@ -1,0 +1,677 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>CS 180: IMAGE WARPING and MOSAICING</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 3px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+    margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-block;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1.25em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(55, 53, 47, 1);
+}
+.highlight-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.highlight-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.highlight-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.highlight-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.highlight-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.highlight-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.highlight-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.highlight-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.highlight-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.highlight-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.highlight-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.highlight-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.highlight-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.highlight-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.highlight-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.block-color-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.block-color-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.block-color-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.block-color-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.block-color-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.block-color-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.block-color-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.block-color-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.block-color-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.block-color-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.block-color-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.block-color-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.select-value-color-interactiveBlue { background-color: rgba(35, 131, 226, .07); }
+.select-value-color-pink { background-color: rgba(245, 224, 233, 1); }
+.select-value-color-purple { background-color: rgba(232, 222, 238, 1); }
+.select-value-color-green { background-color: rgba(219, 237, 219, 1); }
+.select-value-color-gray { background-color: rgba(227, 226, 224, 1); }
+.select-value-color-translucentGray { background-color: rgba(255, 255, 255, 0.0375); }
+.select-value-color-orange { background-color: rgba(250, 222, 201, 1); }
+.select-value-color-brown { background-color: rgba(238, 224, 218, 1); }
+.select-value-color-red { background-color: rgba(255, 226, 221, 1); }
+.select-value-color-yellow { background-color: rgba(253, 236, 200, 1); }
+.select-value-color-blue { background-color: rgba(211, 229, 239, 1); }
+.select-value-color-pageGlass { background-color: undefined; }
+.select-value-color-washGlass { background-color: undefined; }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="f8f23cea-611a-4207-9887-df601ddf100d" class="page sans"><header><h1 class="page-title">CS 180: IMAGE WARPING and MOSAICING</h1><p class="page-description"></p></header><div class="page-body"><p id="0e833854-405d-4f61-a836-c5507bebb99a" class="">Author: Alexander Ng</p><h2 id="0869321b-5130-49bc-b8f6-03d535a76ce7" class="">Images taken</h2><h3 id="de0af3f9-b320-4d79-b75a-036f1f96c8c4" class="">Lecture hall</h3><div id="6a76d911-450a-424b-a885-c832cb918975" class="column-list"><div id="78ff96ce-dbe7-49d7-88fd-0c39959bafc4" style="width:25%" class="column"><figure id="5e20990f-5dcc-479a-986d-757ecb806b85" class="image"><a href="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/lecture_hall0.jpg"><img style="width:500px" src="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/lecture_hall0.jpg"/></a></figure></div><div id="a701e348-2062-4694-8222-6f37357c298e" style="width:25%" class="column"><figure id="58320b90-f1e8-4775-b019-62b42edbb127" class="image"><a href="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/lecture_hall1.jpg"><img style="width:500px" src="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/lecture_hall1.jpg"/></a></figure></div><div id="fcb61e64-2b59-41d0-aec1-15f2160ef9cc" style="width:25%" class="column"><figure id="8dc666bb-78d6-4dd4-8a93-53586d40d28f" class="image"><a href="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/lecture_hall2.jpg"><img style="width:500px" src="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/lecture_hall2.jpg"/></a></figure></div><div id="b615595c-7cc9-4c97-956f-496b2e765d3d" style="width:25%" class="column"><figure id="601386b1-8112-4965-9f5c-1a7e68efa476" class="image"><a href="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/lecture_hall3.jpg"><img style="width:500px" src="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/lecture_hall3.jpg"/></a></figure></div></div><h3 id="bf599001-61c9-449c-b09d-1290533f9f99" class="">Hallway</h3><div id="c4ed7169-cf39-42b7-9120-9db9b3c9cfd9" class="column-list"><div id="397c0d9b-3b12-41dc-ab8a-0b7075e32329" style="width:25%" class="column"><figure id="4cc9c7fd-9e8a-4999-a21e-35b1b089a5cb" class="image"><a href="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/hallway1.jpg"><img style="width:500px" src="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/hallway1.jpg"/></a></figure></div><div id="1340a487-b921-44e8-9f5a-ebb98a54f9e3" style="width:25%" class="column"><figure id="4f8661a6-301d-4069-b952-7bd30bceb906" class="image"><a href="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/hallway2.jpg"><img style="width:500px" src="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/hallway2.jpg"/></a></figure></div><div id="8d1542b8-478b-4279-bd6a-9fbe8b5bcfb2" style="width:25%" class="column"><figure id="74a68b88-fc19-41a4-b3e7-a9ef68844abf" class="image"><a href="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/hallway3.jpg"><img style="width:500px" src="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/hallway3.jpg"/></a></figure></div><div id="63ffc948-1e91-4148-93a4-33696a643c20" style="width:25%" class="column"><figure id="90f5412c-1a1e-4077-8155-a098a21b0d56" class="image"><a href="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/hallway4.jpg"><img style="width:500px" src="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/hallway4.jpg"/></a></figure></div></div><h2 id="dff751c8-ade4-4bb8-a93a-1cf71de3afe3" class="">Rectified Images</h2><div id="f04bd039-2cb4-4cb2-830a-230bb613862e" class="column-list"><div id="ffdbc0a7-eaf9-404a-be59-a5d7352d0134" style="width:50%" class="column"><figure id="ffc44840-d256-471a-a59a-8fb8a7113d76" class="image"><a href="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/hallway4%201.jpg"><img style="width:624px" src="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/hallway4%201.jpg"/></a><figcaption>Original</figcaption></figure></div><div id="2db862d4-c1f8-4993-80eb-ad17f143733d" style="width:50%" class="column"><figure id="a1c45239-6543-4ef8-940f-a117b9558f92" class="image"><a href="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/rectified_hallway4_rectify_image.jpg"><img style="width:629px" src="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/rectified_hallway4_rectify_image.jpg"/></a><figcaption>Rectified</figcaption></figure></div></div><div id="e279e0f1-d84f-4065-ae52-6b8b5b84f1fe" class="column-list"><div id="b8088f9d-e2a5-478f-b56d-d3763df0eb1c" style="width:50%" class="column"><figure id="a17ba2af-1c1f-4356-88a1-390a53eebd60" class="image"><a href="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/ipad.jpg"><img style="width:500px" src="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/ipad.jpg"/></a><figcaption>Original</figcaption></figure></div><div id="55b0a238-c898-4368-a00b-81cd91c8a650" style="width:50%" class="column"><figure id="67cd9df1-df89-4a51-9b5d-026bcf17f9b0" class="image"><a href="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/rectified_ipad_image.jpg"><img style="width:432px" src="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/rectified_ipad_image.jpg"/></a><figcaption>Rectified</figcaption></figure></div></div><h2 id="1c6a1cba-7af3-473d-8bbc-e81ed239ef1e" class="">Mosaic</h2><p id="7f4c97eb-5f7a-4cfa-bd68-3f97fdcbc5a0" class="">In order to form the mosaic, both images have to be aligned and facing the same direction. I approached this problem by first warping the left image and its corresponding points. Then, I took the minimum x, y values from the corresponding points in both warped and right image to find the distance necessary to align both images. Since the corresponding points are unique and the minimum x, y values do not change due to the change in perspective, this worked. Afterwards, I calculated a gradient mask to apply onto the images such that I could safely combine both images and achieve a seemless addition.</p><figure id="4c346c9f-899f-4eb4-8677-dd5be2ff38fb" class="image"><a href="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/hallway1_hallway2_mosaic.jpg"><img style="width:775px" src="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/hallway1_hallway2_mosaic.jpg"/></a></figure><figure id="1a3ca64b-94df-46b2-ae1e-7613186937f0" class="image"><a href="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/mosaic.png"><img style="width:720px" src="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/mosaic.png"/></a></figure><h2 id="64041d86-8ebb-4854-8133-bddf1bd6d112" class="">Problems Encountered</h2><p id="8f1fd895-f2d0-400e-9ec3-01be17f22b59" class="">In this project, I had faced a major problem. Although my initial warping function had produced a similar output as that of OpenCV’s warpPerspective(), the results were not ideal. This was because the warp had cut off areas of the image that would have not been in the image plane I am warping onto, resulting a massive loss of visual data.</p><h3 id="403ea728-b07d-4b00-9805-5c73f8e3bdbc" class="">Here are some examples:</h3><figure id="cf2a6146-bc16-4475-945a-2d902ae6a6f8" class="image"><a href="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/left2right.png"><img style="width:1761px" src="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/left2right.png"/></a></figure><figure id="7fe14f65-0cb4-4e0b-a8e1-bb6f8496510e" class="image"><a href="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/right2left.png"><img style="width:1761px" src="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/right2left.png"/></a></figure><p id="a95b2a57-64e7-4386-a3c3-4f5e8e82377f" class="">By examining closer onto a single set of images, I was able to find the cause of this issue:</p><figure id="65cf834d-69e5-4d0e-a687-14557fad120c" class="image"><a href="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/closerExamine.png"><img style="width:676px" src="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/closerExamine.png"/></a></figure><p id="9e87049e-58fb-4bb3-9d68-a70b7866b321" class="">By overlaying the corresponding points on my image, I recognized that the problem came from the fact that this was reflective of what a change in my angle would look like. As objects in my original image would not be seen in my view if I rotated my camera. Therefore, I added shifting values so I can capture the entire image even after transformation.</p><p id="a0988c81-557e-4b19-961e-b146453b9d82" class="">
+</p><figure id="bc650927-e1f8-423a-9f8a-58d987da67d1" class="image"><a href="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/shiftedFix.png"><img style="width:1761px" src="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/shiftedFix.png"/></a></figure><h2 id="94c6b435-0930-4317-a496-1c0da80929f2" class="">Lessons Learned</h2><p id="36f2d22a-64e4-4df0-808d-7bc6bf931710" class="">The most significant lesson learned in this project for me was to choose implementations that would be easier to debug. Although this was not mentioned in the Problems Encountered section, the problems faced would have been avoided had I chose to use inverse warping sooner. I had picked forward warping initially because of its straight forward implementation. However, when it came to debugging and drawing things out, it became harder as it was easier for me to think from the warped image to the original image, rather than from the original image to the warped. Therefore, I should take approaches that would be easier to dissect rather than just implement.</p><h2 id="153c1d8d-3efd-44aa-830c-946c305b542b" class="">Extra work done</h2><p id="5e2702a1-9649-4d2b-8ab5-4ebfc7e2993f" class="">To make alignment a smoother process, I used exhaustive search within a small range of the corresponding points and picking out points with the least summed squared loss. </p><p id="0d5b104c-d3ca-424d-be13-8757822b45b9" class="">Here is an example:</p><p id="4876e63f-9639-4337-a564-aa233b6b198f" class="">Pre-alignment:</p><figure id="76d3f518-1fe7-479a-89fe-d0576fed35a7" class="image"><a href="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/pre_alignment.png"><img style="width:986px" src="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/pre_alignment.png"/></a></figure><p id="ae9ad2cb-d425-41ad-a456-027771e31387" class="">Post-alignment</p><figure id="5773354a-075b-42bc-be78-ee121647bbe1" class="image"><a href="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/post_alignment.png"><img style="width:986px" src="CS%20180%20IMAGE%20WARPING%20and%20MOSAICING%20f8f23cea611a42079887df601ddf100d/post_alignment.png"/></a></figure><p id="3b1bff56-501d-48d7-8638-fd71af007bdc" class="">The difference was minuscule but significant. It made warping more accurate and therefore, creating the mosaic was subsequently easier.</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>
